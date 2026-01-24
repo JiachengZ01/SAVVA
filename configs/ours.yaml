@@ -9,7 +9,7 @@ strategy: adavboost
 models:
   llava:
     vge:
-      alpha: 0.65
+      alpha: 0.5
       risk_scale: 0.50
     layers:
       start: 0
@@ -20,7 +20,7 @@ models:
 
   qwen:
     vge:
-      alpha: 0.8
+      alpha: 0.6
       risk_scale: 0.60
     layers:
       start: 4
@@ -31,7 +31,7 @@ models:
 
   internvl:
     vge:
-      alpha: 0.55
+      alpha: 0.8
       risk_scale: 0.70
     layers:
       start: 4
