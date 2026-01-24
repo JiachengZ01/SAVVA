@@ -1,0 +1,24 @@
+# AdaVBoost Requirements
+# Install PyTorch first: https://pytorch.org/get-started/locally/
+# Example: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# Core ML
+transformers==4.57.3
+accelerate>=0.30.0
+bitsandbytes>=0.43.0  # For LLaVA 4-bit quantization
+
+# Image processing
+pillow>=10.0.0
+
+# Data & utilities
+numpy>=1.24.0
+tqdm>=4.65.0
+pyyaml>=6.0
+
+# NLP (for evaluation metrics)
+nltk>=3.8.0
+spacy>=3.7.0
+
+# After installing, download required models:
+# python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger'); nltk.download('wordnet'); nltk.download('punkt_tab'); nltk.download('averaged_perceptron_tagger_eng')"
+# python -m spacy download en_core_web_lg

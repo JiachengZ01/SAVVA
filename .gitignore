@@ -1,0 +1,18 @@
+# Logs
+*logs/
+*log/
+
+# data
+*image/
+*COCO_2014/
+/datasets/gqa/
+/datasets/VG/
+
+# pycache
+*__pycache__/
+
+# test output
+*output/
+
+# API keys (keep private)
+configs/openai_api_key.sh

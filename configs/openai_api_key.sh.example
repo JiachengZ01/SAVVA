@@ -1,0 +1,9 @@
+# OpenAI API Configuration Template
+# Copy this file to openai_api_key.sh and fill in your API key:
+#   cp configs/openai_api_key.sh.example configs/openai_api_key.sh
+#
+# Then edit openai_api_key.sh with your actual API key.
+# The openai_api_key.sh file is ignored by git, so your keys stay private.
+
+export OPENAI_API_KEY="your_openai_api_key_here"
+export OPENAI_BASE_URL=""  # Optional: custom API base URL (leave empty for default OpenAI)
