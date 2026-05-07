@@ -1,7 +1,7 @@
 """
 VGE (Visual Grounding Entropy) Module
 
-Computes hallucination risk signal for AdaVBoost strategy.
+Computes hallucination risk signal for SAVVA strategy.
 
 VGE = alpha * norm_entropy + (1 - alpha) * (1 - G(v))
 
@@ -13,7 +13,7 @@ Intuition:
 - Low G = image doesn't support this word = risky
 - Combining both signals improves hallucination detection
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import torch

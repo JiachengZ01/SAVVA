@@ -5,7 +5,7 @@ InternVL3.5 Boosted Forward Interface
 Uses the strategies module for attention modification.
 This file only handles the model-specific hooking logic.
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import math
@@ -24,7 +24,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from strategies import BaseBoostStrategy, AdaVBoostStrategy
+from strategies import BaseBoostStrategy, SAVVAStrategy
 
 # Import Qwen3 specific functions (InternVL3.5 uses Qwen3 as LLM backbone)
 try:
@@ -350,11 +350,11 @@ class InternVLBoostedInterface:
         """Compute and set grounding scores for VGE scoring.
 
         Call this after prepare_inputs() but before generation.
-        Only needed when using AdaVBoostStrategy with VGE.
+        Only needed when using SAVVAStrategy with VGE.
 
         Args:
             inputs: Model inputs from prepare_inputs()
-            strategy: AdaVBoostStrategy instance
+            strategy: SAVVAStrategy instance
 
         Returns:
             True if grounding scores were computed successfully
@@ -429,10 +429,10 @@ class InternVLBoostedInterface:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Testing InternVL Boosted Interface with AdaVBoostStrategy")
+    print("Testing InternVL Boosted Interface with SAVVAStrategy")
     print("=" * 60)
 
-    strategy = AdaVBoostStrategy(model_name='internvl')
+    strategy = SAVVAStrategy(model_name='internvl')
     strategy.enable()
 
     model = InternVLBoostedInterface(strategy=strategy)

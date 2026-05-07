@@ -1,18 +1,18 @@
-# bash scripts/amber/adavboost.sh
+# bash scripts/chair/savva.sh
 
 # MODEL: llava, qwen, internvl (space-separated for multiple)
-# STRATEGY: adavboost
-# DATASET: amber
+# STRATEGY: savva
+# DATASET: chair
 # NUM_SAMPLES: number of samples to evaluate (empty = all)
 
-MODELS="internvl"           # e.g., "llava qwen internvl"
-STRATEGIES="adavboost"
-DATASET=amber
+MODELS="llava"           # e.g., "llava qwen internvl"
+STRATEGIES="savva"
+DATASET=chair
 NUM_SAMPLES=
 
 # Run all combinations
 for MODEL in $MODELS; do
-    mkdir -p logs/amber/$MODEL
+    mkdir -p logs/chair/$MODEL
 
     for STRATEGY in $STRATEGIES; do
         CMD="python -u inference.py --model $MODEL --strategy $STRATEGY --dataset $DATASET"
@@ -24,8 +24,8 @@ for MODEL in $MODELS; do
         fi
 
         echo "Running: $MODEL + $STRATEGY"
-        time $CMD > logs/amber/$MODEL/${LOG_NAME}.log 2>&1
-        echo "Done: $MODEL + $STRATEGY -> logs/amber/$MODEL/${LOG_NAME}.log"
+        time $CMD > logs/chair/$MODEL/${LOG_NAME}.log 2>&1
+        echo "Done: $MODEL + $STRATEGY -> logs/chair/$MODEL/${LOG_NAME}.log"
         echo ""
     done
 done

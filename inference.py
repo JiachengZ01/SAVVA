@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-AdaVBoost Inference Script for VLM Hallucination Evaluation
+SAVVA Inference Script for VLM Hallucination Evaluation
 
 Supports:
 - Models: llava, qwen, internvl
-- Strategies: baseline (no modification), adavboost (our method)
+- Strategies: baseline (no modification), savva (our method)
 - Benchmarks: amber, pope (coco/aokvqa/gqa/all), chair, shr
 
 Usage:
     # AMBER benchmark (generative + discriminative)
-    python inference.py --model internvl --strategy adavboost --dataset amber
+    python inference.py --model internvl --strategy savva --dataset amber
 
     # AMBER benchmark (generative only)
-    python inference.py --model internvl --strategy adavboost --dataset amber --amber-task generative
+    python inference.py --model internvl --strategy savva --dataset amber --amber-task generative
 
     # POPE benchmark (--pope-dataset: coco/aokvqa/gqa/all, --pope-type: random/popular/adversarial/all)
-    python inference.py --model internvl --strategy adavboost --dataset pope --pope-dataset all --pope-type all
+    python inference.py --model internvl --strategy savva --dataset pope --pope-dataset all --pope-type all
 
     # CHAIR benchmark
-    python inference.py --model internvl --strategy adavboost --dataset chair
+    python inference.py --model internvl --strategy savva --dataset chair
 
     # SHR benchmark (requires OpenAI API key for LLM-as-a-judge evaluation, default: gpt-5-mini)
-    python inference.py --model internvl --strategy adavboost --dataset shr --shr-api-key YOUR_KEY
+    python inference.py --model internvl --strategy savva --dataset shr --shr-api-key YOUR_KEY
 
     # Baseline (no attention modification)
     python inference.py --model internvl --strategy baseline --dataset chair
 
-AdaVBoost parameters are loaded from configs/ours.yaml (can be overridden via CLI for sensitivity analysis)
+SAVVA parameters are loaded from configs/ours.yaml (can be overridden via CLI for sensitivity analysis)
 Summary results are saved to output/{dataset}/{model}/
 """
 
@@ -49,8 +49,8 @@ warnings.filterwarnings("ignore", message=".*generation flags.*")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from strategies import NoBoostStrategy
-from strategies import AdaVBoostStrategy, RiskLogitsProcessor
-from strategies.ours import load_adavboost_config, get_model_config
+from strategies import SAVVAStrategy, RiskLogitsProcessor
+from strategies.ours import load_savva_config, get_model_config
 from evaluation.amber_eval import run_amber_evaluation, setup_seed
 from evaluation.pope_eval import run_pope_evaluation_all, run_pope_evaluation, POPE_TYPES, POPE_DATASETS
 from evaluation.chair_eval import run_chair_evaluation
@@ -61,8 +61,8 @@ from evaluation.shr_eval import load_shr_queries, evaluate_shr, SHR_PROMPT
 # Configuration Loading
 # =============================================================================
 
-def get_adavboost_config(model_name):
-    """Get AdaVBoost parameters for a specific model from configs/ours.yaml."""
+def get_savva_config(model_name):
+    """Get SAVVA parameters for a specific model from configs/ours.yaml."""
     return get_model_config(model_name)
 
 
@@ -70,24 +70,24 @@ def get_adavboost_config(model_name):
 # Model Creation
 # =============================================================================
 
-def create_model(model_name, strategy_name, adavboost_config=None, adavboost_overrides=None):
+def create_model(model_name, strategy_name, savva_config=None, savva_overrides=None):
     """Create model with specified strategy.
 
     Args:
         model_name: 'llava', 'qwen', or 'internvl'
-        strategy_name: 'baseline' or 'adavboost'
-        adavboost_config: AdaVBoost configuration dict (from get_adavboost_config)
-        adavboost_overrides: Dict of AdaVBoost parameter overrides for sensitivity analysis
+        strategy_name: 'baseline' or 'savva'
+        savva_config: SAVVA configuration dict (from get_savva_config)
+        savva_overrides: Dict of SAVVA parameter overrides for sensitivity analysis
 
     Returns:
         (model, strategy) tuple
     """
-    if strategy_name == "adavboost":
-        if adavboost_config is None:
-            adavboost_config = get_adavboost_config(model_name)
+    if strategy_name == "savva":
+        if savva_config is None:
+            savva_config = get_savva_config(model_name)
         # Apply any CLI overrides for sensitivity analysis
-        overrides = adavboost_overrides or {}
-        strategy = AdaVBoostStrategy(
+        overrides = savva_overrides or {}
+        strategy = SAVVAStrategy(
             model_name=model_name,
             risk_scale=overrides.get('risk_scale'),
             m_max_visual=overrides.get('m_max_visual'),
@@ -114,8 +114,8 @@ def create_model(model_name, strategy_name, adavboost_config=None, adavboost_ove
     return model, strategy
 
 
-def create_adavboost_processor(strategy, debug=False):
-    """Factory function to create AdaVBoost logits processor."""
+def create_savva_processor(strategy, debug=False):
+    """Factory function to create SAVVA logits processor."""
     return RiskLogitsProcessor(strategy, debug=debug)
 
 
@@ -123,7 +123,7 @@ def create_adavboost_processor(strategy, debug=False):
 # Dataset Runners
 # =============================================================================
 
-def run_amber(model, model_name, strategy, strategy_name, args, adavboost_processor_factory=None):
+def run_amber(model, model_name, strategy, strategy_name, args, savva_processor_factory=None):
     """Run AMBER benchmark evaluation."""
     result = run_amber_evaluation(
         model=model,
@@ -133,7 +133,7 @@ def run_amber(model, model_name, strategy, strategy_name, args, adavboost_proces
         amber_dir=args.data_dir or "datasets/amber",
         num_gen_samples=args.num_samples,
         num_disc_samples=args.num_samples,
-        adavboost_processor_factory=adavboost_processor_factory,
+        savva_processor_factory=savva_processor_factory,
         task_type=args.amber_task,
     )
 
@@ -152,7 +152,7 @@ def run_amber(model, model_name, strategy, strategy_name, args, adavboost_proces
     }
 
 
-def run_pope(model, model_name, strategy, strategy_name, args, adavboost_processor_factory=None):
+def run_pope(model, model_name, strategy, strategy_name, args, savva_processor_factory=None):
     """Run POPE benchmark evaluation."""
     # Default paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -187,7 +187,7 @@ def run_pope(model, model_name, strategy, strategy_name, args, adavboost_process
                 pope_dir=pope_dir,
                 image_dir=image_dir,
                 num_samples=args.num_samples,
-                adavboost_processor_factory=adavboost_processor_factory,
+                savva_processor_factory=savva_processor_factory,
                 dataset=pope_dataset,
             )
             all_metrics[pope_dataset] = {pope_type: result[pope_type]['metrics'] for pope_type in POPE_TYPES}
@@ -202,7 +202,7 @@ def run_pope(model, model_name, strategy, strategy_name, args, adavboost_process
                 image_dir=image_dir,
                 pope_type=args.pope_type,
                 num_samples=args.num_samples,
-                adavboost_processor_factory=adavboost_processor_factory,
+                savva_processor_factory=savva_processor_factory,
                 dataset=pope_dataset,
             )
             all_metrics[pope_dataset] = {args.pope_type: result['metrics']}
@@ -217,7 +217,7 @@ def run_pope(model, model_name, strategy, strategy_name, args, adavboost_process
     }
 
 
-def run_chair(model, model_name, strategy, strategy_name, args, adavboost_processor_factory=None):
+def run_chair(model, model_name, strategy, strategy_name, args, savva_processor_factory=None):
     """Run CHAIR benchmark evaluation."""
     # Default paths
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -232,7 +232,7 @@ def run_chair(model, model_name, strategy, strategy_name, args, adavboost_proces
         coco_dir=coco_dir,
         cache_path=cache_path,
         num_samples=args.num_samples,
-        adavboost_processor_factory=adavboost_processor_factory,
+        savva_processor_factory=savva_processor_factory,
     )
 
     return {
@@ -242,7 +242,7 @@ def run_chair(model, model_name, strategy, strategy_name, args, adavboost_proces
     }
 
 
-def run_shr(model, model_name, strategy, strategy_name, args, adavboost_processor_factory=None):
+def run_shr(model, model_name, strategy, strategy_name, args, savva_processor_factory=None):
     """Run SHR benchmark evaluation."""
     from PIL import Image
     from transformers import LogitsProcessorList
@@ -264,7 +264,7 @@ def run_shr(model, model_name, strategy, strategy_name, args, adavboost_processo
         queries = load_shr_queries(shr_dir, vg_dir, num_samples=args.num_samples)
 
         # Setup processor
-        adavboost_processor = adavboost_processor_factory(strategy) if adavboost_processor_factory else None
+        savva_processor = savva_processor_factory(strategy) if savva_processor_factory else None
 
         # Generate captions
         results = {}
@@ -290,8 +290,8 @@ def run_shr(model, model_name, strategy, strategy_name, args, adavboost_processo
                     visual_indices, dtype=torch.long, device=model.device
                 )
                 strategy.reset()
-                if adavboost_processor:
-                    adavboost_processor.step_count = 0
+                if savva_processor:
+                    savva_processor.step_count = 0
 
                 # Setup VGE visual grounding if needed
                 if hasattr(strategy, 'set_grounding_scores'):
@@ -317,8 +317,8 @@ def run_shr(model, model_name, strategy, strategy_name, args, adavboost_processo
             }
 
             # Add logits processor
-            if adavboost_processor:
-                gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+            if savva_processor:
+                gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
             with torch.no_grad():
                 outputs = model.model.generate(**gen_kwargs)
@@ -388,14 +388,14 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python inference.py --model internvl --strategy adavboost --dataset amber
-    python inference.py --model internvl --strategy adavboost --dataset pope --pope-dataset all
-    python inference.py --model internvl --strategy adavboost --dataset chair
-    python inference.py --model internvl --strategy adavboost --dataset shr --shr-api-key YOUR_KEY
+    python inference.py --model internvl --strategy savva --dataset amber
+    python inference.py --model internvl --strategy savva --dataset pope --pope-dataset all
+    python inference.py --model internvl --strategy savva --dataset chair
+    python inference.py --model internvl --strategy savva --dataset shr --shr-api-key YOUR_KEY
 
-    # AdaVBoost with parameter overrides (sensitivity analysis):
-    python inference.py --model internvl --strategy adavboost --dataset chair --vge-alpha 0.7
-    python inference.py --model internvl --strategy adavboost --dataset amber --risk-scale 0.5 --m-max-visual 1.3
+    # SAVVA with parameter overrides (sensitivity analysis):
+    python inference.py --model internvl --strategy savva --dataset chair --vge-alpha 0.7
+    python inference.py --model internvl --strategy savva --dataset amber --risk-scale 0.5 --m-max-visual 1.3
 
     # Baseline (no attention modification):
     python inference.py --model internvl --strategy baseline --dataset chair
@@ -407,8 +407,8 @@ Examples:
                         choices=["llava", "qwen", "internvl"],
                         help="Model to test")
     parser.add_argument("--strategy", type=str, required=True,
-                        choices=["baseline", "adavboost"],
-                        help="Strategy to use (baseline=no modification, adavboost=our method)")
+                        choices=["baseline", "savva"],
+                        help="Strategy to use (baseline=no modification, savva=our method)")
     parser.add_argument("--dataset", type=str, required=True,
                         choices=list(DATASET_RUNNERS.keys()),
                         help="Dataset to evaluate on")
@@ -442,15 +442,15 @@ Examples:
     parser.add_argument("--save-results", action="store_true",
                         help="Save detailed results to JSON file")
 
-    # AdaVBoost parameter overrides (for sensitivity analysis)
+    # SAVVA parameter overrides (for sensitivity analysis)
     parser.add_argument("--risk-scale", type=float, default=None,
-                        help="AdaVBoost: Risk scaling factor")
+                        help="SAVVA: Risk scaling factor")
     parser.add_argument("--m-max-visual", type=float, default=None,
-                        help="AdaVBoost: Maximum visual token boost multiplier")
+                        help="SAVVA: Maximum visual token boost multiplier")
     parser.add_argument("--m-max-text", type=float, default=None,
-                        help="AdaVBoost: Maximum text token suppress multiplier (suppress = 1/m_max_text)")
+                        help="SAVVA: Maximum text token suppress multiplier (suppress = 1/m_max_text)")
     parser.add_argument("--vge-alpha", type=float, default=None,
-                        help="AdaVBoost: VGE weight for entropy (alpha*entropy + (1-alpha)*(1-G))")
+                        help="SAVVA: VGE weight for entropy (alpha*entropy + (1-alpha)*(1-G))")
 
     return parser.parse_args()
 
@@ -644,9 +644,9 @@ def main():
     setup_seed(args.seed)
 
     # Load strategy config if needed
-    adavboost_config = None
-    if args.strategy == "adavboost":
-        adavboost_config = get_adavboost_config(args.model)
+    savva_config = None
+    if args.strategy == "savva":
+        savva_config = get_savva_config(args.model)
 
     # Print configuration
     print("=" * 70)
@@ -667,38 +667,38 @@ def main():
         print(f"SHR API Key: {'provided' if args.shr_api_key else 'not provided (will skip GPT-4 evaluation)'}")
         if args.shr_base_url:
             print(f"SHR API URL: {args.shr_base_url}")
-    if adavboost_config:
+    if savva_config:
         # Show config values with override indicators
         def fmt(val, override, name):
             if override is not None:
                 return f"{override} (override)"
             return f"{val}"
 
-        risk_str = fmt(adavboost_config['risk_scale'], args.risk_scale, 'risk')
-        vge_alpha_str = fmt(adavboost_config.get('vge_alpha', 0.75), args.vge_alpha, 'vge_alpha')
-        m_max_visual_str = fmt(adavboost_config['m_max_visual'], args.m_max_visual, 'm_max_visual')
-        m_max_text_str = fmt(adavboost_config['m_max_text'], args.m_max_text, 'm_max_text')
+        risk_str = fmt(savva_config['risk_scale'], args.risk_scale, 'risk')
+        vge_alpha_str = fmt(savva_config.get('vge_alpha', 0.75), args.vge_alpha, 'vge_alpha')
+        m_max_visual_str = fmt(savva_config['m_max_visual'], args.m_max_visual, 'm_max_visual')
+        m_max_text_str = fmt(savva_config['m_max_text'], args.m_max_text, 'm_max_text')
         print(f"VGE alpha: {vge_alpha_str}")
         print(f"Risk scale: {risk_str}")
         print(f"M visual: [1.0, {m_max_visual_str}]")
         print(f"M text: {m_max_text_str} (suppress = 1/m_text)")
-        print(f"Layers: {adavboost_config['start_layer']}-{adavboost_config['end_layer']}")
+        print(f"Layers: {savva_config['start_layer']}-{savva_config['end_layer']}")
     print(f"Samples: {args.num_samples or 'all'}")
     print(f"Seed: {args.seed}")
     print("=" * 70)
 
-    # Collect AdaVBoost overrides from CLI args (for sensitivity analysis)
-    adavboost_overrides = None
-    if args.strategy == "adavboost":
-        adavboost_overrides = {}
+    # Collect SAVVA overrides from CLI args (for sensitivity analysis)
+    savva_overrides = None
+    if args.strategy == "savva":
+        savva_overrides = {}
         if args.risk_scale is not None:
-            adavboost_overrides['risk_scale'] = args.risk_scale
+            savva_overrides['risk_scale'] = args.risk_scale
         if args.m_max_visual is not None:
-            adavboost_overrides['m_max_visual'] = args.m_max_visual
+            savva_overrides['m_max_visual'] = args.m_max_visual
         if args.m_max_text is not None:
-            adavboost_overrides['m_max_text'] = args.m_max_text
+            savva_overrides['m_max_text'] = args.m_max_text
         if args.vge_alpha is not None:
-            adavboost_overrides['vge_alpha'] = args.vge_alpha
+            savva_overrides['vge_alpha'] = args.vge_alpha
 
     # Special case: SHR with pre-generated captions (skip model loading)
     if args.dataset == 'shr' and args.shr_captions_file:
@@ -740,14 +740,14 @@ def main():
     else:
         # Normal flow: load model and run evaluation
         # Create model
-        model, strategy = create_model(args.model, args.strategy, adavboost_config, adavboost_overrides)
+        model, strategy = create_model(args.model, args.strategy, savva_config, savva_overrides)
 
-        # Create AdaVBoost processor factory if needed
-        adavboost_processor_factory = create_adavboost_processor if args.strategy == "adavboost" else None
+        # Create SAVVA processor factory if needed
+        savva_processor_factory = create_savva_processor if args.strategy == "savva" else None
 
         # Run evaluation
         runner = DATASET_RUNNERS[args.dataset]
-        result = runner(model, args.model, strategy, args.strategy, args, adavboost_processor_factory)
+        result = runner(model, args.model, strategy, args.strategy, args, savva_processor_factory)
 
         # Print and save summary
         print_summary(result, args.model, args.strategy, args.dataset,
@@ -776,8 +776,8 @@ def main():
                 "strategy": args.strategy,
                 "dataset": args.dataset,
                 "pope_dataset": args.pope_dataset if args.dataset == "pope" else None,
-                "adavboost_config": adavboost_config if adavboost_config else None,
-                "adavboost_overrides": adavboost_overrides if adavboost_overrides else None,
+                "savva_config": savva_config if savva_config else None,
+                "savva_overrides": savva_overrides if savva_overrides else None,
                 "seed": args.seed,
             },
             **result

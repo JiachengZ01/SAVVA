@@ -8,7 +8,7 @@ Complete evaluation pipeline for AMBER benchmark:
 - Metrics computation (CHAIR, Cover, Hal, Cog, Accuracy, Precision, Recall, F1)
 - AMBER score calculation
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import os
@@ -528,17 +528,17 @@ def normalize_yes_no(response):
 
 
 def run_generative_inference(model, model_name, strategy, strategy_name, items, image_dir,
-                              adavboost_processor_factory=None):
+                              savva_processor_factory=None):
     """Run generative task inference on AMBER dataset.
 
     Args:
         model: Model instance (LLaVABoostedInterface or QwenBoostedInterface)
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         items: List of query items from load_amber_queries()
         image_dir: Path to image directory
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
 
     Returns:
         List of results with 'id' and 'response' keys
@@ -574,8 +574,8 @@ def run_generative_inference(model, model_name, strategy, strategy_name, items, 
 
         visual_indices = model.detect_visual_token_indices(inputs['input_ids'])
 
-        # Set visual indices and reset strategy for AdaVBoost
-        if strategy_name == "adavboost":
+        # Set visual indices and reset strategy for SAVVA
+        if strategy_name == "savva":
             model._visual_indices_tensor = torch.tensor(
                 visual_indices, dtype=torch.long, device=model.device
             )
@@ -600,10 +600,10 @@ def run_generative_inference(model, model_name, strategy, strategy_name, items, 
             "pad_token_id": pad_token_id,
         }
 
-        # Add AdaVBoost logits processor if needed
-        if strategy_name == "adavboost" and adavboost_processor_factory:
-            adavboost_processor = adavboost_processor_factory(strategy)
-            gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+        # Add SAVVA logits processor if needed
+        if strategy_name == "savva" and savva_processor_factory:
+            savva_processor = savva_processor_factory(strategy)
+            gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
         with torch.no_grad():
             outputs = model.model.generate(**gen_kwargs)
@@ -628,17 +628,17 @@ def run_generative_inference(model, model_name, strategy, strategy_name, items, 
 
 
 def run_discriminative_inference(model, model_name, strategy, strategy_name, items, image_dir,
-                                  adavboost_processor_factory=None):
+                                  savva_processor_factory=None):
     """Run discriminative task inference on AMBER dataset.
 
     Args:
         model: Model instance (LLaVABoostedInterface or QwenBoostedInterface)
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         items: List of query items from load_amber_queries()
         image_dir: Path to image directory
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
 
     Returns:
         List of results with 'id' and 'response' keys
@@ -674,8 +674,8 @@ def run_discriminative_inference(model, model_name, strategy, strategy_name, ite
 
         visual_indices = model.detect_visual_token_indices(inputs['input_ids'])
 
-        # Set visual indices and reset strategy for AdaVBoost
-        if strategy_name == "adavboost":
+        # Set visual indices and reset strategy for SAVVA
+        if strategy_name == "savva":
             model._visual_indices_tensor = torch.tensor(
                 visual_indices, dtype=torch.long, device=model.device
             )
@@ -700,10 +700,10 @@ def run_discriminative_inference(model, model_name, strategy, strategy_name, ite
             "pad_token_id": pad_token_id,
         }
 
-        # Add AdaVBoost logits processor if needed
-        if strategy_name == "adavboost" and adavboost_processor_factory:
-            adavboost_processor = adavboost_processor_factory(strategy)
-            gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+        # Add SAVVA logits processor if needed
+        if strategy_name == "savva" and savva_processor_factory:
+            savva_processor = savva_processor_factory(strategy)
+            gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
         with torch.no_grad():
             outputs = model.model.generate(**gen_kwargs)
@@ -730,18 +730,18 @@ def run_discriminative_inference(model, model_name, strategy, strategy_name, ite
 
 def run_amber_evaluation(model, model_name, strategy, strategy_name, amber_dir,
                           num_gen_samples=None, num_disc_samples=None,
-                          adavboost_processor_factory=None, task_type="all"):
+                          savva_processor_factory=None, task_type="all"):
     """Run AMBER evaluation (generative and/or discriminative).
 
     Args:
         model: Model instance
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         amber_dir: Path to AMBER dataset directory
         num_gen_samples: Number of generative samples (None = all)
         num_disc_samples: Number of discriminative samples (None = all)
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
         task_type: "generative", "discriminative", or "all" (default: "all")
 
     Returns:
@@ -775,7 +775,7 @@ def run_amber_evaluation(model, model_name, strategy, strategy_name, amber_dir,
 
         gen_results = run_generative_inference(
             model, model_name, strategy, strategy_name,
-            gen_items, image_dir, adavboost_processor_factory
+            gen_items, image_dir, savva_processor_factory
         )
         gen_metrics = evaluate_results(gen_results, eval_data)
         print(f"\nGenerative Results: CHAIR={gen_metrics['CHAIR']:.2f}% Cover={gen_metrics['Cover']:.2f}% "
@@ -792,7 +792,7 @@ def run_amber_evaluation(model, model_name, strategy, strategy_name, amber_dir,
 
         disc_results = run_discriminative_inference(
             model, model_name, strategy, strategy_name,
-            disc_items, image_dir, adavboost_processor_factory
+            disc_items, image_dir, savva_processor_factory
         )
         disc_metrics = evaluate_discriminative_results(disc_results, eval_data)
         print(f"\nDiscriminative Results: Acc={disc_metrics['Accuracy']:.2f}% Prec={disc_metrics['Precision']:.2f}% "

@@ -1,4 +1,4 @@
-# AdaVBoost Requirements
+# SAVVA Requirements
 # Install PyTorch first: https://pytorch.org/get-started/locally/
 # Example: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 

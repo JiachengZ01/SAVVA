@@ -1,14 +1,14 @@
-# bash scripts/pope/adavboost.sh
+# bash scripts/pope/savva.sh
 
 # MODEL: llava, qwen, internvl (space-separated for multiple)
-# STRATEGY: adavboost
+# STRATEGY: savva
 # DATASET: pope
 # POPE_DATASET: coco, aokvqa, gqa, all
 # POPE_TYPE: random, popular, adversarial, all
 # NUM_SAMPLES: number of samples to evaluate (empty = all)
 
 MODELS="llava"           # e.g., "llava qwen internvl"
-STRATEGIES="adavboost"
+STRATEGIES="savva"
 DATASET=pope
 POPE_DATASET=all
 POPE_TYPE=all

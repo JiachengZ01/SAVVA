@@ -7,7 +7,7 @@ This implementation strictly follows HA-DPO's original implementation.
 
 Reference: HA-DPO (https://github.com/zhaozhao99/HA-DPO)
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import os
@@ -633,7 +633,7 @@ def evaluate_shr(
 
 
 # =============================================================================
-# Inference Helper (for AdaVBoost models)
+# Inference Helper (for SAVVA models)
 # =============================================================================
 
 def run_shr_inference(
@@ -652,7 +652,7 @@ def run_shr_inference(
         shr_dir: Path to SHR data
         vg_dir: Path to VG data
         num_samples: Number of samples (None = all 200)
-        strategy: Optional AdaVBoost strategy
+        strategy: Optional SAVVA strategy
         output_file: Path to save captions JSON
 
     Returns:
@@ -665,11 +665,11 @@ def run_shr_inference(
     # Load queries
     queries = load_shr_queries(shr_dir, vg_dir, num_samples=num_samples)
 
-    # Setup AdaVBoost processor if strategy provided
-    adavboost_processor = None
+    # Setup SAVVA processor if strategy provided
+    savva_processor = None
     if strategy is not None:
         from strategies.ours import RiskLogitsProcessor
-        adavboost_processor = RiskLogitsProcessor(strategy)
+        savva_processor = RiskLogitsProcessor(strategy)
 
     results = {}
 
@@ -695,8 +695,8 @@ def run_shr_inference(
                 visual_indices, dtype=torch.long, device=model.device
             )
             strategy.reset()
-            if adavboost_processor:
-                adavboost_processor.step_count = 0
+            if savva_processor:
+                savva_processor.step_count = 0
             # Setup VGE visual grounding if needed
             if hasattr(strategy, 'set_grounding_scores'):
                 if hasattr(model, 'setup_vge_grounding'):
@@ -719,8 +719,8 @@ def run_shr_inference(
             "pad_token_id": pad_token_id,
         }
 
-        if adavboost_processor:
-            gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+        if savva_processor:
+            gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
         with torch.no_grad():
             outputs = model.model.generate(**gen_kwargs)

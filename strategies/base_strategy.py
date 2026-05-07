@@ -4,7 +4,7 @@ Base Strategy for Attention Modification
 
 Defines the abstract interface and basic implementations for attention boost strategies.
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 from abc import ABC, abstractmethod

@@ -10,7 +10,7 @@ Complete evaluation pipeline for CHAIR (Caption Hallucination Assessment with Im
 The evaluation logic follows the original CHAIR implementation:
 Reference: https://github.com/LisaAnne/Hallucination
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import os
@@ -481,16 +481,16 @@ CHAIR_PROMPT = "Please help me describe the image in detail."
 
 
 def run_chair_inference(model, model_name, strategy, strategy_name, queries,
-                        adavboost_processor_factory=None, prompt=None):
+                        savva_processor_factory=None, prompt=None):
     """Run CHAIR inference (image captioning).
 
     Args:
         model: Model instance (LLaVABoostedInterface or QwenBoostedInterface)
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         queries: List of query items from load_chair_queries()
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
         prompt: Prompt for captioning (default: CHAIR_PROMPT)
 
     Returns:
@@ -547,8 +547,8 @@ def run_chair_inference(model, model_name, strategy, strategy_name, queries,
 
         visual_indices = model.detect_visual_token_indices(inputs['input_ids'])
 
-        # Set visual indices and reset strategy for AdaVBoost
-        if strategy_name == "adavboost":
+        # Set visual indices and reset strategy for SAVVA
+        if strategy_name == "savva":
             model._visual_indices_tensor = torch.tensor(
                 visual_indices, dtype=torch.long, device=model.device
             )
@@ -573,10 +573,10 @@ def run_chair_inference(model, model_name, strategy, strategy_name, queries,
             "pad_token_id": pad_token_id,
         }
 
-        # Add AdaVBoost logits processor if needed
-        if strategy_name == "adavboost" and adavboost_processor_factory:
-            adavboost_processor = adavboost_processor_factory(strategy)
-            gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+        # Add SAVVA logits processor if needed
+        if strategy_name == "savva" and savva_processor_factory:
+            savva_processor = savva_processor_factory(strategy)
+            gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
         with torch.no_grad():
             outputs = model.model.generate(**gen_kwargs)
@@ -605,18 +605,18 @@ def run_chair_inference(model, model_name, strategy, strategy_name, queries,
 
 def run_chair_evaluation(model, model_name, strategy, strategy_name,
                          coco_dir, cache_path=None, num_samples=None,
-                         adavboost_processor_factory=None):
+                         savva_processor_factory=None):
     """Run complete CHAIR evaluation.
 
     Args:
         model: Model instance
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         coco_dir: Path to COCO directory (containing val2014/)
         cache_path: Path to CHAIR evaluator cache (chair.pkl)
         num_samples: Number of samples (None = use CHAIR_DEFAULT_SAMPLES=500)
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
 
     Returns:
         Dictionary with metrics and raw results
@@ -633,7 +633,7 @@ def run_chair_evaluation(model, model_name, strategy, strategy_name,
     # Run inference
     results = run_chair_inference(
         model, model_name, strategy, strategy_name,
-        queries, adavboost_processor_factory
+        queries, savva_processor_factory
     )
 
     # Filter out skipped results for evaluation

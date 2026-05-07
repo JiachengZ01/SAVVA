@@ -5,7 +5,7 @@ No Boost Strategy (Baseline)
 This strategy does nothing - returns attention weights unchanged.
 Used as a baseline for comparison.
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import torch

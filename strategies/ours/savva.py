@@ -1,5 +1,5 @@
 """
-AdaVBoost Strategy
+SAVVA Strategy
 
 Model-specific config loaded from configs/ours.yaml
 """
@@ -27,8 +27,8 @@ def _get_config_path():
     return os.path.normpath(config_path)
 
 
-def load_adavboost_config(config_path: str = None) -> Dict:
-    """Load AdaVBoost configuration from YAML file."""
+def load_savva_config(config_path: str = None) -> Dict:
+    """Load SAVVA configuration from YAML file."""
     if config_path is None:
         config_path = _get_config_path()
 
@@ -42,7 +42,7 @@ def load_adavboost_config(config_path: str = None) -> Dict:
 def get_model_config(model_name: str, config: Dict = None) -> Dict:
     """Get model-specific configuration."""
     if config is None:
-        config = load_adavboost_config()
+        config = load_savva_config()
 
     if model_name not in config['models']:
         raise ValueError(f"Unknown model: {model_name}. Available: {list(config['models'].keys())}")
@@ -59,9 +59,9 @@ def get_model_config(model_name: str, config: Dict = None) -> Dict:
     }
 
 
-class AdaVBoostStrategy(BaseBoostStrategy):
+class SAVVAStrategy(BaseBoostStrategy):
     """
-    AdaVBoost: Mitigating Hallucinations in LVLMs via Token-Level Adaptive Visual Attention Boosting.
+    SAVVA: Mitigating Hallucinations in LVLMs via Step-wise Adaptive Visual Attention Amplification.
 
     Uses VGE (Visual Grounding Entropy) for risk estimation and applies
     adaptive attention reweighting to reduce hallucination.
@@ -89,11 +89,11 @@ class AdaVBoostStrategy(BaseBoostStrategy):
         end_layer: Optional[int] = None,
         vge_alpha: Optional[float] = None,
     ):
-        super().__init__(name="adavboost")
+        super().__init__(name="savva")
 
         self.model_name = model_name
 
-        cfg = get_model_config(model_name, load_adavboost_config(config_path) if config_path else None)
+        cfg = get_model_config(model_name, load_savva_config(config_path) if config_path else None)
 
         self.start_layer = start_layer if start_layer is not None else cfg['start_layer']
         self.end_layer = end_layer if end_layer is not None else cfg['end_layer']
@@ -231,7 +231,7 @@ class AdaVBoostStrategy(BaseBoostStrategy):
         current_kv_len: int = None,
         **kwargs
     ) -> torch.Tensor:
-        """Apply AdaVBoost attention reweighting strategy."""
+        """Apply SAVVA attention reweighting strategy."""
         if not self._enabled:
             return attn_weights
 
@@ -303,7 +303,7 @@ class AdaVBoostStrategy(BaseBoostStrategy):
 
     def __repr__(self):
         return (
-            f"AdaVBoostStrategy("
+            f"SAVVAStrategy("
             f"model={self.model_name}, "
             f"vge_alpha={self.vge_alpha}, "
             f"m_visual=[1.0, {self.m_max_visual}], "

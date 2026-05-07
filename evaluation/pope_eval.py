@@ -10,7 +10,7 @@ Complete evaluation pipeline for POPE (Polling-based Object Probing Evaluation) 
 The evaluation logic follows POPE official implementation exactly.
 Reference: https://github.com/AoiDragon/POPE/blob/main/evaluate.py
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import os
@@ -286,17 +286,17 @@ def evaluate_pope_results(predictions, labels):
 # =============================================================================
 
 def run_pope_inference(model, model_name, strategy, strategy_name, queries, image_dir,
-                       adavboost_processor_factory=None):
+                       savva_processor_factory=None):
     """Run POPE inference.
 
     Args:
         model: Model instance (LLaVABoostedInterface or QwenBoostedInterface)
         model_name: 'llava' or 'qwen'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         queries: List of query items from load_pope_queries()
         image_dir: Path to COCO val2014 image directory
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
 
     Returns:
         List of results with predictions and labels
@@ -358,8 +358,8 @@ def run_pope_inference(model, model_name, strategy, strategy_name, queries, imag
 
         visual_indices = model.detect_visual_token_indices(inputs['input_ids'])
 
-        # Set visual indices and reset strategy for AdaVBoost
-        if strategy_name == "adavboost":
+        # Set visual indices and reset strategy for SAVVA
+        if strategy_name == "savva":
             model._visual_indices_tensor = torch.tensor(
                 visual_indices, dtype=torch.long, device=model.device
             )
@@ -384,10 +384,10 @@ def run_pope_inference(model, model_name, strategy, strategy_name, queries, imag
             "pad_token_id": pad_token_id,
         }
 
-        # Add AdaVBoost logits processor if needed
-        if strategy_name == "adavboost" and adavboost_processor_factory:
-            adavboost_processor = adavboost_processor_factory(strategy)
-            gen_kwargs["logits_processor"] = LogitsProcessorList([adavboost_processor])
+        # Add SAVVA logits processor if needed
+        if strategy_name == "savva" and savva_processor_factory:
+            savva_processor = savva_processor_factory(strategy)
+            gen_kwargs["logits_processor"] = LogitsProcessorList([savva_processor])
 
         with torch.no_grad():
             outputs = model.model.generate(**gen_kwargs)
@@ -422,19 +422,19 @@ def run_pope_inference(model, model_name, strategy, strategy_name, queries, imag
 
 def run_pope_evaluation(model, model_name, strategy, strategy_name,
                         pope_dir, image_dir, pope_type="random",
-                        num_samples=None, adavboost_processor_factory=None, dataset="coco"):
+                        num_samples=None, savva_processor_factory=None, dataset="coco"):
     """Run complete POPE evaluation for a single pope_type.
 
     Args:
         model: Model instance
         model_name: 'llava', 'qwen', or 'internvl'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         pope_dir: Path to pope directory (e.g., datasets/pope_coco)
         image_dir: Path to image directory (e.g., datasets/COCO_2014/val2014)
         pope_type: One of "random", "popular", "adversarial"
         num_samples: Number of samples (None = all)
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
         dataset: One of "coco", "aokvqa", "gqa"
 
     Returns:
@@ -450,7 +450,7 @@ def run_pope_evaluation(model, model_name, strategy, strategy_name,
     # Run inference
     results = run_pope_inference(
         model, model_name, strategy, strategy_name,
-        queries, image_dir, adavboost_processor_factory
+        queries, image_dir, savva_processor_factory
     )
 
     # Extract predictions and labels (filter out skipped)
@@ -484,18 +484,18 @@ def run_pope_evaluation(model, model_name, strategy, strategy_name,
 
 def run_pope_evaluation_all(model, model_name, strategy, strategy_name,
                             pope_dir, image_dir, num_samples=None,
-                            adavboost_processor_factory=None, dataset="coco"):
+                            savva_processor_factory=None, dataset="coco"):
     """Run POPE evaluation on all three types (random, popular, adversarial).
 
     Args:
         model: Model instance
         model_name: 'llava', 'qwen', or 'internvl'
         strategy: Strategy instance
-        strategy_name: 'baseline' or 'adavboost'
+        strategy_name: 'baseline' or 'savva'
         pope_dir: Path to pope directory
         image_dir: Path to image directory
         num_samples: Number of samples per type (None = all)
-        adavboost_processor_factory: Factory function to create AdaVBoost logits processor
+        savva_processor_factory: Factory function to create SAVVA logits processor
         dataset: One of "coco", "aokvqa", "gqa"
 
     Returns:
@@ -507,7 +507,7 @@ def run_pope_evaluation_all(model, model_name, strategy, strategy_name,
         result = run_pope_evaluation(
             model, model_name, strategy, strategy_name,
             pope_dir, image_dir, pope_type,
-            num_samples, adavboost_processor_factory, dataset
+            num_samples, savva_processor_factory, dataset
         )
         all_results[pope_type] = result
 

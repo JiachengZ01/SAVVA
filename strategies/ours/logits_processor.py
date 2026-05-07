@@ -5,7 +5,7 @@ Risk Update LogitsProcessor
 Updates strategy's risk value at each generation step.
 This is CRITICAL - without this, the strategy uses constant risk=0.
 
-Author: AdaVBoost Project
+Author: SAVVA Project
 """
 
 import torch
@@ -16,7 +16,7 @@ class RiskLogitsProcessor(LogitsProcessor):
     """
     LogitsProcessor that updates strategy's risk at each step.
 
-    This must be used during generation for AdaVBoost strategy to work properly.
+    This must be used during generation for SAVVA strategy to work properly.
     Without this, the risk stays at 0 and the strategy has no effect.
 
     Usage:

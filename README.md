@@ -1,4 +1,4 @@
-# AdaVBoost: Mitigating Hallucinations in LVLMs via Token-Level Adaptive Visual Attention Boosting
+# SAVVA: Mitigating Hallucinations in LVLMs via Step-wise Adaptive Visual Attention Amplification
 
 ## Installation
 
@@ -97,20 +97,20 @@ unzip images.zip && rm images.zip
 
 ```bash
 # AMBER benchmark
-bash scripts/amber/adavboost.sh      # AdaVBoost
+bash scripts/amber/savva.sh      # SAVVA
 bash scripts/amber/baseline.sh       # Baseline
 
 # POPE benchmark
-bash scripts/pope/adavboost.sh       # AdaVBoost
+bash scripts/pope/savva.sh       # SAVVA
 bash scripts/pope/baseline.sh        # Baseline
 
 # CHAIR benchmark
-bash scripts/chair/adavboost.sh      # AdaVBoost
+bash scripts/chair/savva.sh      # SAVVA
 bash scripts/chair/baseline.sh       # Baseline
 
 # SHR benchmark (requires OpenAI API key)
 export OPENAI_API_KEY=your_key
-bash scripts/shr/adavboost.sh        # AdaVBoost
+bash scripts/shr/savva.sh        # SAVVA
 bash scripts/shr/baseline.sh         # Baseline
 ```
 
@@ -121,9 +121,9 @@ Results are saved to `output/{dataset}/{model}/`, logs to `logs/{dataset}/{model
 ## Project Structure
 
 ```
-AdaVBoost/
+SAVVA/
 ├── configs/
-│   └── ours.yaml                 # Model-specific AdaVBoost parameters
+│   └── ours.yaml                 # Model-specific SAVVA parameters
 ├── scripts/                      # Evaluation scripts
 │   ├── amber/
 │   ├── pope/
@@ -135,7 +135,7 @@ AdaVBoost/
 │   ├── no_boost.py               # Baseline (no modification)
 │   └── ours/
 │       ├── __init__.py
-│       ├── adavboost.py          # AdaVBoost strategy
+│       ├── savva.py              # SAVVA strategy
 │       ├── vge.py                # VGE computation
 │       └── logits_processor.py   # Risk update during generation
 ├── llava_next/
